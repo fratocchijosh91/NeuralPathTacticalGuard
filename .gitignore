@@ -1,0 +1,23 @@
+# Eseguibili & Build output
+*.exe
+artifacts/
+Output/
+winres/rsrc_*.syso
+
+# Log e Config
+logs/
+*.log
+*.txt
+!LEGGIMI.txt
+!relase/EULA.txt
+!relase/LICENSE.txt
+!relase/README.txt
+config.json
+
+# Segreti
+licenze.key
+tools/keygen/
+
+# Editor
+.vs/
+fix_icon.ps1

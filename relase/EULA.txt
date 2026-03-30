@@ -1,0 +1,105 @@
+CONTRATTO DI LICENZA CON L'UTENTE FINALE (EULA)
+NeuralPath Tactical Guard v2.2
+Copyright (c) 2026 Josh Fratocchi. Tutti i diritti riservati.
+
+=======================================================================
+
+LEGGERE ATTENTAMENTE PRIMA DI INSTALLARE O UTILIZZARE IL SOFTWARE.
+
+Installando, copiando o utilizzando in qualsiasi altro modo NeuralPath
+Tactical Guard ("il Software"), l'utente accetta di essere vincolato
+dai termini del presente Contratto di Licenza con l'Utente Finale
+("EULA"). Se non si accettano i termini del presente contratto, non
+installare né utilizzare il Software.
+
+-----------------------------------------------------------------------
+1. CONCESSIONE DI LICENZA
+-----------------------------------------------------------------------
+Josh Fratocchi concede all'utente una licenza personale, non esclusiva,
+non trasferibile e revocabile per installare ed utilizzare il Software
+su un numero illimitato di computer di cui si e' legittimi proprietari
+o amministratori, esclusivamente per uso personale o interno.
+
+-----------------------------------------------------------------------
+2. RESTRIZIONI
+-----------------------------------------------------------------------
+L'utente NON puo':
+  a) Vendere, concedere in sublicenza, affittare, noleggiare o
+     distribuire il Software a terzi;
+  b) Decompilare, decodificare, disassemblare o tentare di derivare
+     il codice sorgente del Software;
+  c) Modificare, adattare, tradurre o creare opere derivate basate
+     sul Software;
+  d) Rimuovere o alterare qualsiasi indicazione di copyright, marchio
+     o altro avviso proprietario presente nel Software.
+
+-----------------------------------------------------------------------
+3. PROPRIETA' INTELLETTUALE
+-----------------------------------------------------------------------
+Il Software e' protetto dalle leggi sul copyright e dai trattati
+internazionali. Josh Fratocchi e i suoi licenziatari detengono tutti
+i diritti, titoli e interessi relativi al Software, inclusi tutti i
+diritti di proprieta' intellettuale. Il presente EULA non trasferisce
+all'utente alcun diritto di proprieta' intellettuale sul Software.
+
+-----------------------------------------------------------------------
+4. RACCOLTA DATI E PRIVACY
+-----------------------------------------------------------------------
+Il Software opera esclusivamente in locale. Non raccoglie, trasmette
+o condivide dati personali dell'utente con server esterni. I file di
+log generati (neuralpath.log, neuralpath_tactical.log) sono salvati
+localmente e sono sotto il pieno controllo dell'utente.
+
+-----------------------------------------------------------------------
+5. ESCLUSIONE DI GARANZIE
+-----------------------------------------------------------------------
+IL SOFTWARE E' FORNITO "COSI' COM'E'" SENZA GARANZIE DI ALCUN TIPO,
+ESPLICITE O IMPLICITE, INCLUSE, A TITOLO ESEMPLIFICATIVO, LE GARANZIE
+IMPLICITE DI COMMERCIABILITA', IDONEITA' PER UN PARTICOLARE SCOPO E
+NON VIOLAZIONE. L'INTERO RISCHIO DERIVANTE DALL'USO O DALLE PRESTAZIONI
+DEL SOFTWARE RIMANE A CARICO DELL'UTENTE.
+
+-----------------------------------------------------------------------
+6. LIMITAZIONE DI RESPONSABILITA'
+-----------------------------------------------------------------------
+IN NESSUN CASO JOSH FRATOCCHI SARA' RESPONSABILE PER DANNI INDIRETTI,
+INCIDENTALI, SPECIALI, ESEMPLARI O CONSEQUENZIALI (INCLUSI, A TITOLO
+ESEMPLIFICATIVO, PERDITA DI DATI, PERDITA DI PROFITTI O INTERRUZIONE
+DELL'ATTIVITA') DERIVANTI DALL'USO O DALL'IMPOSSIBILITA' DI UTILIZZARE
+IL SOFTWARE, ANCHE SE INFORMATO DELLA POSSIBILITA' DI TALI DANNI.
+
+-----------------------------------------------------------------------
+7. REQUISITI DI SISTEMA
+-----------------------------------------------------------------------
+  - Sistema operativo: Windows 10 / Windows 11
+  - Architettura: x86 (32-bit) o x64 (64-bit)
+  - Permessi di Amministratore (richiesti per il ping di precisione)
+
+-----------------------------------------------------------------------
+8. RISOLUZIONE DEL CONTRATTO
+-----------------------------------------------------------------------
+Il presente EULA e' efficace fino alla sua risoluzione. I diritti
+dell'utente ai sensi del presente EULA si risolvono automaticamente,
+senza preavviso, in caso di mancato rispetto di uno qualsiasi dei
+termini e delle condizioni. Alla risoluzione, l'utente deve cessare
+ogni utilizzo del Software e distruggere tutte le copie.
+
+-----------------------------------------------------------------------
+9. LEGGE APPLICABILE
+-----------------------------------------------------------------------
+Il presente contratto e' regolato dalla legge italiana. Qualsiasi
+controversia derivante dal presente contratto sara' sottoposta alla
+giurisdizione esclusiva del foro competente secondo la normativa
+vigente.
+
+-----------------------------------------------------------------------
+10. CONTATTI
+-----------------------------------------------------------------------
+Per domande relative al presente EULA, contattare:
+  Sviluppatore: Josh Fratocchi
+  Prodotto:     NeuralPath Tactical Guard v2.2
+
+=======================================================================
+Installando il Software, l'utente dichiara di aver letto, compreso e
+accettato integralmente i termini del presente contratto.
+=======================================================================
