@@ -1,8 +1,7 @@
 # 🛰️ NeuralPath Tactical Guard
 
 <p align="center">
-  <!-- INSERISCI QUI IL LINK AL TUO SCREENSHOT VERO QUANDO LO CARICHI SU GITHUB -->
-  <img src="https://via.placeholder.com/800x600.png?text=Inserisci+qui+lo+screenshot+della+tua+UI+Tattica" alt="NeuralPath Tactical Guard UI">
+  <img src="screenshot.png" alt="NeuralPath Tactical Guard UI">
 </p>
 
 **NeuralPath Tactical Guard** is a professional-grade, tactical network monitoring tool written in Go and Fyne. Designed for mission-critical setups, it provides real-time latency tracking and failover awareness between a Primary connection (e.g. Starlink) and a Secondary cellular backup (iPhone/Android Hotspot).
