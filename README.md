@@ -41,7 +41,7 @@ If you become a Sponsor, we will issue a secure **PRO License Key** (`NP-PRO-...
 | **Session Reports (TXT/CSV)** | ❌ *(Test Only)* | ✅ |
 | **Persistent Averages Analytics**| ❌ | ✅ |
 
-💖 **[Become a GitHub Sponsor to get your PRO License Key!](#)** *(Sostituisci il # con il link alla tua pagina Sponsor)*
+💖 **[Become a GitHub Sponsor to get your PRO License Key!](https://github.com/sponsors/fratocchijosh91)**
 
 ## 🚀 Installation 
 
@@ -56,7 +56,7 @@ You don't need to compile anything to start using NeuralPath Tactical Guard.
 If you want to compile the project from source, ensure you have [Go](https://go.dev/) installed on your machine.
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/NeuralPath_Lab.git
+git clone https://github.com/fratocchijosh91/NeuralPathTacticalGuard.git
 cd NeuralPath_Lab
 go mod tidy
 
