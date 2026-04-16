@@ -11,7 +11,9 @@ if [[ ! -f "${ENV_FILE}" ]]; then
 fi
 
 # shellcheck disable=SC1090
+set -a
 source "${ENV_FILE}"
+set +a
 
 if command -v go >/dev/null 2>&1; then
   GO_BIN="$(command -v go)"
