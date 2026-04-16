@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"sync"
 	"time"
 
 	"fyne.io/fyne/v2"
@@ -26,11 +27,6 @@ var version = "v2.1"
 var isPro bool
 
 const maxHistoryPoints = 30
-
-var (
-	startTime    time.Time
-	countAllarmi int
-)
 
 func getPingColor(ms int) color.Color {
 	if ms < 40 {
@@ -90,33 +86,36 @@ func creaModulo(title string, imagePath string, colTitle color.Color) (*canvas.T
 }
 
 func formatStarlinkPingText(ms int) string {
+	currentCfg := GetConfig()
 	if ms >= 999 {
 		return "LOST"
 	}
-	if ms > cfg.LagThresholdMs {
+	if ms > currentCfg.LagThresholdMs {
 		return fmt.Sprintf("%d MS ⚠", ms)
 	}
 	return fmt.Sprintf("%d MS", ms)
 }
 
 func formatDevicePingText(ms int) string {
+	currentCfg := GetConfig()
 	if ms >= 999 {
 		return "OFFLINE"
 	}
 	if ms == 0 {
 		return "<1 MS"
 	}
-	if ms > cfg.LagThresholdMs {
+	if ms > currentCfg.LagThresholdMs {
 		return fmt.Sprintf("%d MS ⚠", ms)
 	}
 	return fmt.Sprintf("%d MS", ms)
 }
 
 func pingDisplayColor(ms int) color.Color {
+	currentCfg := GetConfig()
 	if ms >= 999 {
 		return color.NRGBA{R: 255, A: 255}
 	}
-	if ms > cfg.LagThresholdMs {
+	if ms > currentCfg.LagThresholdMs {
 		return color.NRGBA{R: 255, G: 165, B: 0, A: 255}
 	}
 	return getPingColor(ms)
@@ -320,14 +319,14 @@ func saveReportCSV(reportPath string, starlinkHistory, deviceHistory []int) erro
 }
 
 func main() {
-	cfg = LoadConfig()
+	loadedCfg := LoadConfig()
 
 	initLogger()
 	defer closeLogger()
 
 	myApp := app.NewWithID("com.neuralpath.tacticalguard")
 
-	licenseStatus := ResolveLicenseStatus(&cfg)
+	licenseStatus := ResolveLicenseStatus(&loadedCfg)
 	accessExpired := licenseStatus.Mode == LicenseModeExpired || licenseStatus.Mode == LicenseModeInvalid
 
 	isPro = licenseStatus.IsPro
@@ -386,15 +385,16 @@ func main() {
 		trialInfoColor = color.NRGBA{R: 0, G: 255, B: 120, A: 255}
 	}
 
-	myWindow := myApp.NewWindow(cfg.AppTitle + " " + version)
-	
+	myWindow := myApp.NewWindow(loadedCfg.AppTitle + " " + version)
+
 	if iconData, err := resourceFS.ReadFile("Satellite.png"); err == nil {
 		appIcon := fyne.NewStaticResource("Satellite.png", iconData)
 		myApp.SetIcon(appIcon)
 		myWindow.SetIcon(appIcon)
 	}
 
-	startTime = time.Now()
+	startTime := time.Now()
+	countAllarmi := 0
 
 	if accessExpired {
 		dialog.ShowInformation(
@@ -457,6 +457,34 @@ func main() {
 	var starlinkHistory []int
 	var deviceHistory []int
 	var lastState State
+	var sessionMu sync.RWMutex
+
+	copyHistory := func(src []int) []int {
+		if len(src) == 0 {
+			return nil
+		}
+		dst := make([]int, len(src))
+		copy(dst, src)
+		return dst
+	}
+
+	getSessionSnapshot := func() (time.Time, int, []int, []int, State) {
+		sessionMu.RLock()
+		defer sessionMu.RUnlock()
+
+		return startTime, countAllarmi, copyHistory(starlinkHistory), copyHistory(deviceHistory), lastState
+	}
+
+	resetSessionData := func() {
+		sessionMu.Lock()
+		defer sessionMu.Unlock()
+
+		startTime = time.Now()
+		countAllarmi = 0
+		lastState = State{}
+		starlinkHistory = nil
+		deviceHistory = nil
+	}
 
 	var lastOfflineNotification time.Time
 	var lastLagNotification time.Time
@@ -473,9 +501,10 @@ func main() {
 	)
 
 	refreshGraph := func() {
+		_, _, starlinkSnapshot, deviceSnapshot, _ := getSessionSnapshot()
 		graphHolder.Objects = []fyne.CanvasObject{
 			graphBackground,
-			drawPingGraph(starlinkHistory, deviceHistory, graphWidth, graphHeight),
+			drawPingGraph(starlinkSnapshot, deviceSnapshot, graphWidth, graphHeight),
 		}
 		graphHolder.Refresh()
 	}
@@ -496,11 +525,8 @@ func main() {
 	var deactivateLicenseBtn *widget.Button
 
 	resetBtn := widget.NewButton("RESET SESSION DATA", func() {
-		startTime = time.Now()
-		countAllarmi = 0
+		resetSessionData()
 		resetLogicState()
-		starlinkHistory = nil
-		deviceHistory = nil
 		refreshGraph()
 		statsText.Text = "STARLINK AVG: 0 | MAX: 0    DEVICE AVG: 0 | MAX: 0"
 		alertText.Text = "NESSUN ALERT"
@@ -564,7 +590,8 @@ func main() {
 	}
 
 	applyLicenseUI := func() {
-		licenseStatus = ResolveLicenseStatus(&cfg)
+		currentCfg := GetConfig()
+		licenseStatus = ResolveLicenseStatus(&currentCfg)
 		accessExpired = licenseStatus.Mode == LicenseModeExpired || licenseStatus.Mode == LicenseModeInvalid
 
 		isPro = licenseStatus.IsPro
@@ -626,10 +653,7 @@ func main() {
 			mock.SetState(true, "IPHONE", 29, 12)
 			netImpl = mock
 			resetLogicState()
-			countAllarmi = 0
-			startTime = time.Now()
-			starlinkHistory = nil
-			deviceHistory = nil
+			resetSessionData()
 			refreshGraph()
 			statsText.Text = "STARLINK AVG: 0 | MAX: 0    DEVICE AVG: 0 | MAX: 0"
 			alertText.Text = "NESSUN ALERT"
@@ -673,7 +697,10 @@ func main() {
 					return
 				}
 
-				_, err := ActivateLicense(&cfg, keyEntry.Text)
+				err := WithConfigWrite(func(c *AppConfig) error {
+					_, activateErr := ActivateLicense(c, keyEntry.Text)
+					return activateErr
+				})
 				if err != nil {
 					dialog.ShowError(err, myWindow)
 					return
@@ -702,7 +729,9 @@ func main() {
 
 				wasRealMode := !testMode
 
-				err := ClearLicense(&cfg)
+				err := WithConfigWrite(func(c *AppConfig) error {
+					return ClearLicense(c)
+				})
 				if err != nil {
 					dialog.ShowError(err, myWindow)
 					return
@@ -730,17 +759,27 @@ func main() {
 	})
 
 	saveReportBtn = widget.NewButton("SALVA REPORT", func() {
+		currentCfg := GetConfig()
+		startSnapshot, alarmsSnapshot, starlinkSnapshot, deviceSnapshot, stateSnapshot := getSessionSnapshot()
 		mode := "TEST"
 		if !testMode {
 			mode = "RETE REALE"
 		}
 
 		timestamp := time.Now().Format("2006-01-02_15-04-05")
-		txtPath := filepath.Join(cfg.ReportsDir, "report_"+timestamp+".txt")
-		csvPath := filepath.Join(cfg.ReportsDir, "report_"+timestamp+".csv")
+		txtPath := filepath.Join(currentCfg.ReportsDir, "report_"+timestamp+".txt")
+		csvPath := filepath.Join(currentCfg.ReportsDir, "report_"+timestamp+".csv")
 
-		errTxt := saveReportTXT(txtPath, mode, time.Since(startTime), countAllarmi, starlinkHistory, deviceHistory, lastState)
-		errCSV := saveReportCSV(csvPath, starlinkHistory, deviceHistory)
+		errTxt := saveReportTXT(
+			txtPath,
+			mode,
+			time.Since(startSnapshot),
+			alarmsSnapshot,
+			starlinkSnapshot,
+			deviceSnapshot,
+			stateSnapshot,
+		)
+		errCSV := saveReportCSV(csvPath, starlinkSnapshot, deviceSnapshot)
 
 		if errTxt == nil && errCSV == nil {
 			reportStatusText.Text = "REPORT SALVATO"
@@ -776,10 +815,7 @@ func main() {
 			testMode = false
 			netImpl = realNet
 			resetLogicState()
-			countAllarmi = 0
-			startTime = time.Now()
-			starlinkHistory = nil
-			deviceHistory = nil
+			resetSessionData()
 			refreshGraph()
 			statsText.Text = "STARLINK AVG: 0 | MAX: 0    DEVICE AVG: 0 | MAX: 0"
 			alertText.Text = "NESSUN ALERT"
@@ -794,10 +830,7 @@ func main() {
 			mock.SetState(true, "IPHONE", 29, 12)
 			netImpl = mock
 			resetLogicState()
-			countAllarmi = 0
-			startTime = time.Now()
-			starlinkHistory = nil
-			deviceHistory = nil
+			resetSessionData()
 			refreshGraph()
 			statsText.Text = "STARLINK AVG: 0 | MAX: 0    DEVICE AVG: 0 | MAX: 0"
 			alertText.Text = "NESSUN ALERT"
@@ -887,12 +920,11 @@ func main() {
 
 	go func() {
 		for {
-			state := updateLogic(netImpl, countAllarmi)
-			lastState = state
-			countAllarmi = state.AlarmCount
-			elapsed := time.Since(startTime)
+			currentCfg := GetConfig()
+			_, prevAlarms, _, _, _ := getSessionSnapshot()
+			state := updateLogic(netImpl, prevAlarms)
 
-			currentLag := state.StarlinkPing > cfg.LagThresholdMs || (state.IsOnline && state.DevicePing > cfg.LagThresholdMs)
+			currentLag := state.StarlinkPing > currentCfg.LagThresholdMs || (state.IsOnline && state.DevicePing > currentCfg.LagThresholdMs)
 
 			if !prevStateKnown {
 				if state.IsOnline {
@@ -946,20 +978,28 @@ func main() {
 				lastLagNotification = time.Now()
 			}
 
+			var elapsed time.Duration
+			var alarmsSnapshot int
+			var starAvg, starMax, devAvg, devMax int
+			sessionMu.Lock()
+			lastState = state
+			countAllarmi = state.AlarmCount
+			elapsed = time.Since(startTime)
 			starlinkHistory = appendHistory(starlinkHistory, state.StarlinkPing)
 			if state.IsOnline {
 				deviceHistory = appendHistory(deviceHistory, state.DevicePing)
 			} else {
 				deviceHistory = appendHistory(deviceHistory, 999)
 			}
-
-			starAvg, starMax := historyStats(starlinkHistory)
-			devAvg, devMax := historyStats(deviceHistory)
+			alarmsSnapshot = countAllarmi
+			starAvg, starMax = historyStats(starlinkHistory)
+			devAvg, devMax = historyStats(deviceHistory)
+			sessionMu.Unlock()
 
 			fyne.Do(func() {
 				updateButtonsState()
 
-				alarmLogText.Text = fmt.Sprintf("ALLARMI SESSIONE: %d", countAllarmi)
+				alarmLogText.Text = fmt.Sprintf("ALLARMI SESSIONE: %d", alarmsSnapshot)
 
 				uptimeText.Text = fmt.Sprintf(
 					"UPTIME: %02d:%02d:%02d",
@@ -1035,7 +1075,7 @@ func main() {
 				trialInfoText.Refresh()
 			})
 
-			time.Sleep(time.Duration(cfg.RefreshIntervalMs) * time.Millisecond)
+			time.Sleep(time.Duration(currentCfg.RefreshIntervalMs) * time.Millisecond)
 		}
 	}()
 

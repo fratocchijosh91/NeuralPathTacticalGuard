@@ -14,8 +14,9 @@ var (
 )
 
 func initLogger() {
+	currentCfg := GetConfig()
 	fileName := fmt.Sprintf("neuralpath_log_%s.txt", time.Now().Format("2006-01-02"))
-	fullPath := filepath.Join(cfg.LogsDir, fileName)
+	fullPath := filepath.Join(currentCfg.LogsDir, fileName)
 
 	f, err := os.OpenFile(fullPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {

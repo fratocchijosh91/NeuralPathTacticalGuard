@@ -17,6 +17,11 @@ config.json
 # Segreti
 licenze.key
 tools/keygen/
+.license-dev.env
+data/allowed-keys.json
+.license-server.pid
+.license-server.log
+.tools/
 
 # Editor
 .vs/

@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: neuralpath-license-server
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./cmd/license-server/Dockerfile
+    dockerContext: .
+    healthCheckPath: /healthz
+    envVars:
+      - key: NP_LICENSE_ADDR
+        value: ":10000"
+      - key: NP_LICENSE_PRODUCT
+        value: neuralpath-tactical-guard
+      - key: NP_LICENSE_TIER
+        value: PRO
+      - key: NP_LICENSE_PREFIX
+        value: NP
+      - key: NP_LICENSE_TOKEN_TTL_HOURS
+        value: "720"
+      - key: NP_LICENSE_ALLOW_ANY_KEY
+        value: "false"
+      - key: NP_LICENSE_RATE_LIMIT_PER_MIN
+        value: "10"
+      - key: NP_LICENSE_KEYS_PATH
+        value: "data/allowed-keys.json"
+      - key: NP_LICENSE_PRIVATE_KEY_B64
+        sync: false
+      - key: NP_LICENSE_KEYS
+        sync: false
+      - key: NP_STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: NP_ADMIN_API_KEY
+        sync: false

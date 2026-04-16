@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 )
 
@@ -18,11 +19,16 @@ type AppConfig struct {
 	Mode               string    `json:"mode"`
 	TrialDays          int       `json:"trial_days"`
 	LicenseFile        string    `json:"license_file"`
+	LicenseServerURL   string    `json:"license_server_url"`
+	LicensePublicKey   string    `json:"license_public_key"`
 	FirstRunAt         time.Time `json:"first_run_at"`
 	LicenseActivatedAt time.Time `json:"license_activated_at"`
 }
 
-var cfg AppConfig
+var (
+	cfg   AppConfig
+	cfgMu sync.RWMutex
+)
 
 func defaultConfig() AppConfig {
 	now := time.Now()
@@ -38,6 +44,8 @@ func defaultConfig() AppConfig {
 		Mode:               "real",
 		TrialDays:          7,
 		LicenseFile:        "license.key",
+		LicenseServerURL:   "",
+		LicensePublicKey:   "",
 		FirstRunAt:         now,
 		LicenseActivatedAt: time.Time{},
 	}
@@ -52,7 +60,7 @@ func LoadConfig() AppConfig {
 	if err != nil {
 		_ = SaveConfig(configPath, c)
 		ensureConfigDirs(c)
-		cfg = c
+		SetConfig(c)
 		return c
 	}
 
@@ -60,7 +68,7 @@ func LoadConfig() AppConfig {
 		c = defaultConfig()
 		_ = SaveConfig(configPath, c)
 		ensureConfigDirs(c)
-		cfg = c
+		SetConfig(c)
 		return c
 	}
 
@@ -115,7 +123,7 @@ func LoadConfig() AppConfig {
 		_ = SaveConfig(configPath, c)
 	}
 
-	cfg = c
+	SetConfig(c)
 	return c
 }
 
@@ -142,4 +150,25 @@ func ensureConfigDirs(c AppConfig) {
 			_ = os.MkdirAll(licenseDir, 0755)
 		}
 	}
+}
+
+func GetConfig() AppConfig {
+	cfgMu.RLock()
+	defer cfgMu.RUnlock()
+
+	return cfg
+}
+
+func SetConfig(c AppConfig) {
+	cfgMu.Lock()
+	defer cfgMu.Unlock()
+
+	cfg = c
+}
+
+func WithConfigWrite(fn func(c *AppConfig) error) error {
+	cfgMu.Lock()
+	defer cfgMu.Unlock()
+
+	return fn(&cfg)
 }

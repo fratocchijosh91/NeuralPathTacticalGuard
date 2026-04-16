@@ -1,5 +1,7 @@
 package main
 
+import "sync"
+
 type Network interface {
 	Ping(host string) int
 	DetectDevice() (string, bool)
@@ -15,28 +17,34 @@ type State struct {
 
 var lastStatus bool
 var lastStatusInitialized bool
+var logicStateMu sync.Mutex
 
 func resetLogicState() {
+	logicStateMu.Lock()
+	defer logicStateMu.Unlock()
+
 	lastStatus = false
 	lastStatusInitialized = false
 }
 
 func updateLogic(net Network, prevAlarms int) State {
 	device, online := net.DetectDevice()
+	currentCfg := GetConfig()
 
 	starlinkPing := net.Ping("8.8.8.8")
 	devicePing := 999
 
 	if online {
 		if device == "IPHONE" {
-			devicePing = net.Ping(cfg.IPhoneIP)
+			devicePing = net.Ping(currentCfg.IPhoneIP)
 		} else if device == "ANDROID" {
-			devicePing = net.Ping(cfg.AndroidIP)
+			devicePing = net.Ping(currentCfg.AndroidIP)
 		}
 	}
 
 	alarms := prevAlarms
 
+	logicStateMu.Lock()
 	if !lastStatusInitialized {
 		lastStatus = online
 		lastStatusInitialized = true
@@ -46,6 +54,7 @@ func updateLogic(net Network, prevAlarms int) State {
 		}
 		lastStatus = online
 	}
+	logicStateMu.Unlock()
 
 	return State{
 		StarlinkPing: starlinkPing,

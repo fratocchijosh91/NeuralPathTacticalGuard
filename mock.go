@@ -14,10 +14,12 @@ func (m *MockNetwork) Ping(host string) int {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
+	currentCfg := GetConfig()
+
 	switch host {
 	case "8.8.8.8":
 		return m.StarlinkPing
-	case cfg.IPhoneIP, cfg.AndroidIP:
+	case currentCfg.IPhoneIP, currentCfg.AndroidIP:
 		return m.DevicePing
 	default:
 		return 999
