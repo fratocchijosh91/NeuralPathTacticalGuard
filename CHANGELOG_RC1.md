@@ -1,5 +1,21 @@
 # v1.1.0-rc1 - Release Candidate
 
+## Testo pronto per GitHub Release (copia da qui)
+
+Release candidate: license server su Railway, client con attivazione via token **Ed25519**, hardening concorrenza e rete.
+
+**Novità principali:** Docker per `cmd/license-server`, endpoint attivazione/admin/webhook Stripe, rate limit e audit log, `go test -race` e script E2E locali/staging.
+
+**Client:** in `config.json` impostare `license_server_url` (HTTPS del servizio Railway) e `license_public_key` (base64 della chiave pubblica usata dal server in produzione). Dev e produzione devono usare la **stessa** coppia URL + chiave pubblica del server che firma i token.
+
+**Deploy server:** variabili in `## Variabili richieste (Railway)` più sotto; non impostare `NP_LICENSE_ADDR` su Railway.
+
+**Verifica rapida:** `./scripts/staging-e2e.sh --server-url "https://…" --admin-api-key "…" --webhook-secret "…"` deve terminare con `4 passati, 0 falliti`.
+
+---
+
+## Dettaglio (stesso contenuto espanso)
+
 Release candidate con stack licensing pronto per produzione e deploy staging funzionante su Railway.
 
 ## Highlights
@@ -60,3 +76,12 @@ Non impostare `NP_LICENSE_ADDR` su Railway: il servizio usa automaticamente `POR
 ```
 
 Deve chiudere con `4 passati, 0 falliti`.
+
+## Pubblicare il tag e la release
+
+```bash
+git tag -a v1.1.0-rc1 -m "NeuralPath Tactical Guard v1.1.0-rc1 (license server + client hardening)"
+git push origin v1.1.0-rc1
+```
+
+Su GitHub: **Releases → Draft a new release**, seleziona il tag `v1.1.0-rc1`, titolo ad es. `v1.1.0-rc1`, incolla nella descrizione il blocco **Testo pronto per GitHub Release** (dalla prima sezione fino alla riga di separazione `---`).
