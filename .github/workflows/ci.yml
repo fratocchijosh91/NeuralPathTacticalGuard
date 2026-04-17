@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  go-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Dipendenze sistema (Fyne / OpenGL headless)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc libgl1-mesa-dev libegl1-mesa-dev libgles2-mesa-dev libx11-dev xorg-dev xvfb
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: go test -race
+        run: xvfb-run -a go test -race ./... -count=1
+
+      - name: Build license-server (Linux)
+        run: go build -trimpath -ldflags="-s -w" -o /tmp/license-server ./cmd/license-server
+
+  go-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: MinGW (CGO per Fyne)
+        run: |
+          choco install mingw -y --no-progress
+          "C:\ProgramData\mingw64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: go test -race
+        run: go test -race ./... -count=1
+        env:
+          CGO_ENABLED: "1"
+
+      - name: Build license-server (Windows)
+        run: go build -trimpath -ldflags="-s -w" -o license-server.exe ./cmd/license-server
