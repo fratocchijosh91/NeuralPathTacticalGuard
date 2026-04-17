@@ -315,10 +315,7 @@ func IsProLicenseActive(c *AppConfig) bool {
 
 func ValidateCommercialLicense(token string) (CommercialLicenseInfo, error) {
 	currentCfg := pickConfig()
-	if currentCfg == nil {
-		return CommercialLicenseInfo{}, errors.New("config non disponibile")
-	}
-	return validateCommercialLicenseToken(currentCfg, token)
+	return validateCommercialLicenseToken(&currentCfg, token)
 }
 
 func validateCommercialLicenseToken(c *AppConfig, token string) (CommercialLicenseInfo, error) {
@@ -514,7 +511,7 @@ func getMachineID() string {
 
 func ResolveAccess(args ...interface{}) AccessMode {
 	c := pickConfig(args...)
-	status := ResolveLicenseStatus(c)
+	status := ResolveLicenseStatus(&c)
 
 	if status.IsPro {
 		return AccessPro
@@ -527,38 +524,38 @@ func ResolveAccess(args ...interface{}) AccessMode {
 
 func CanExportReport(args ...interface{}) bool {
 	c := pickConfig(args...)
-	return ResolveLicenseStatus(c).IsPro
+	return ResolveLicenseStatus(&c).IsPro
 }
 
 func ShouldShowUpgradePopup(args ...interface{}) bool {
 	c := pickConfig(args...)
-	status := ResolveLicenseStatus(c)
+	status := ResolveLicenseStatus(&c)
 	return status.Mode == LicenseModeExpired || status.Mode == LicenseModeInvalid
 }
 
 func TrialDaysRemaining(args ...interface{}) int {
 	c := pickConfig(args...)
-	status := ResolveLicenseStatus(c)
+	status := ResolveLicenseStatus(&c)
 	if status.IsTrial {
 		return status.DaysLeft
 	}
 	return 0
 }
 
-func pickConfig(args ...interface{}) *AppConfig {
+func pickConfig(args ...interface{}) AppConfig {
 	if len(args) == 0 {
-		currentCfg := GetConfig()
-		return &currentCfg
+		return GetConfig()
 	}
 
 	switch v := args[0].(type) {
 	case *AppConfig:
-		return v
+		if v == nil {
+			return GetConfig()
+		}
+		return *v
 	case AppConfig:
-		tmp := v
-		return &tmp
+		return v
 	default:
-		currentCfg := GetConfig()
-		return &currentCfg
+		return GetConfig()
 	}
 }
