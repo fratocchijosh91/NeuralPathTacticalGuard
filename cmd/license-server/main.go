@@ -222,7 +222,7 @@ func loadServerConfigFromEnv() (*serverConfig, error) {
 	}
 
 	cfg := &serverConfig{
-		addr:                getEnvOrDefault("NP_LICENSE_ADDR", defaultAddr),
+		addr:                resolveListenAddr(),
 		product:             getEnvOrDefault("NP_LICENSE_PRODUCT", defaultProduct),
 		tier:                strings.ToUpper(strings.TrimSpace(getEnvOrDefault("NP_LICENSE_TIER", defaultTier))),
 		prefix:              strings.ToUpper(strings.TrimSpace(getEnvOrDefault("NP_LICENSE_PREFIX", defaultPrefix))),
@@ -245,6 +245,18 @@ func loadServerConfigFromEnv() (*serverConfig, error) {
 		cfg.allowedKeys[key] = struct{}{}
 	}
 	return cfg, nil
+}
+
+func resolveListenAddr() string {
+	if explicit := strings.TrimSpace(os.Getenv("NP_LICENSE_ADDR")); explicit != "" {
+		return explicit
+	}
+
+	if port := strings.TrimSpace(os.Getenv("PORT")); port != "" {
+		return ":" + port
+	}
+
+	return defaultAddr
 }
 
 func parseRateLimit() int {
