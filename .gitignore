@@ -22,6 +22,7 @@ data/allowed-keys.json
 .license-server.pid
 .license-server.log
 .tools/
+.DS_Store
 
 # Editor
 .vs/

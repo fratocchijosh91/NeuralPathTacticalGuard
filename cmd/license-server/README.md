@@ -135,6 +135,11 @@ Lo script:
 3. verifica il token firmato con `cmd/license-token-check`;
 4. conferma compatibilità base con la validazione client.
 
+## Nota deploy platform
+
+- **Railway**: consigliata per `license-server` (servizio always-on + variabili + log).
+- **Vercel**: consigliata per frontend/landing; non ideale come backend principale per questo servizio con persistenza allowlist locale.
+
 Guida veloce in 5 comandi:
 
 ```bash
