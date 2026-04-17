@@ -56,8 +56,14 @@ jobs:
       - name: go vet
         run: go vet ./...
 
-      - name: go test -race
-        run: go test -race ./... -count=1
+      # Il race detector su Windows+Fyne+CGO può restare bloccato a lungo in CI; il check -race è già su Linux.
+      - name: go test (no race)
+        run: go test ./... -count=1
+        env:
+          CGO_ENABLED: "1"
+
+      - name: Build app Windows (stesso profilo dello script release)
+        run: go build -ldflags="-s -w -H windowsgui" -o NeuralPathTacticalGuard.exe .
         env:
           CGO_ENABLED: "1"
 
