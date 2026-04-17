@@ -13,9 +13,11 @@ FROM alpine:3.20
 
 RUN apk add --no-cache ca-certificates tzdata
 RUN adduser -D -u 1000 appuser
+RUN mkdir -p /app/data && chown -R appuser:appuser /app
 
 COPY --from=builder /license-server /usr/local/bin/license-server
 
+WORKDIR /app
 USER appuser
 EXPOSE 8080
 
