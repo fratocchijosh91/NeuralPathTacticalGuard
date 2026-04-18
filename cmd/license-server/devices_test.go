@@ -35,6 +35,6 @@ func TestReadDetectedDevicesFile_Array(t *testing.T) {
 func TestReadDetectedDevicesFile_Missing(t *testing.T) {
 	got := readDetectedDevicesFile(filepath.Join(t.TempDir(), "none.json"))
 	if got != nil {
-		t.Fatalf("expected nil slice, got %#v", got)
+		t.Fatalf("expected nil before normalization, got %#v", got)
 	}
 }

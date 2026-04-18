@@ -34,6 +34,9 @@ func (cfg *serverConfig) handleDetectedDevices(w http.ResponseWriter, r *http.Re
 	}
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	devices := readDetectedDevicesFile(cfg.detectedDevicesPath)
+	if devices == nil {
+		devices = []detectedDevice{}
+	}
 	writeJSON(w, http.StatusOK, detectedDevicesResponse{Devices: devices})
 }
 

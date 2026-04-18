@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Link } from "expo-router";
-import { Activity, RadioTower } from "lucide-react-native";
+import { RadioTower, SlidersHorizontal } from "lucide-react-native";
 import { ServerStatusCard } from "../components/ServerStatusCard";
 import { DetectedDevicesList } from "../components/DetectedDevicesList";
 import {
@@ -84,8 +84,8 @@ export default function HomeScreen() {
           </View>
           <Link href="/diagnostics" asChild>
             <Pressable className="flex-row items-center gap-1 rounded border border-cyber-border bg-cyber-panel px-2 py-2">
-              <Activity color="#39ff14" size={18} />
-              <Text className="font-mono text-[10px] text-cyber-neon-dim">TEST</Text>
+              <SlidersHorizontal color="#39ff14" size={18} />
+              <Text className="font-mono text-[10px] text-cyber-neon-dim">DIAG</Text>
             </Pressable>
           </Link>
         </View>

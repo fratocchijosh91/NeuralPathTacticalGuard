@@ -38,6 +38,9 @@ export async function fetchDetectedDevices(baseUrl: string): Promise<DetectedDev
     method: "GET",
     headers: { Accept: "application/json" },
   });
+  if (res.status === 404) {
+    return [];
+  }
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}`);
   }
