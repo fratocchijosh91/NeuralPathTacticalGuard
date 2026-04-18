@@ -1,0 +1,34 @@
+{
+  "expo": {
+    "name": "TacticalGuardApp",
+    "slug": "TacticalGuardApp",
+    "scheme": "tacticalguardapp",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#050b08"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.neuralpath.tacticalguard"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#050b08"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.neuralpath.tacticalguard"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": ["expo-router"]
+  }
+}

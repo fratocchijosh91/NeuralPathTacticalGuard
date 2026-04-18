@@ -5,6 +5,7 @@ Mini backend per attivazione licenze compatibile con il client in `licenze.go`.
 ## Endpoint
 
 - `GET /healthz`
+- `GET /v1/detected-devices` (lettura JSON dispositivi rilevati, vedi sotto)
 - `GET /v1/public-key`
 - `POST /v1/licenses/activate`
 - `POST /v1/webhooks/stripe`
@@ -40,6 +41,7 @@ Risposta:
 - `NP_LICENSE_ALLOW_ANY_KEY` (`true`/`false`, default `false`)
 - `NP_LICENSE_KEYS` (lista chiavi separate da virgola, usata se `ALLOW_ANY_KEY=false`)
 - `NP_LICENSE_KEYS_PATH` (default `data/allowed-keys.json`, file persistenza allowlist)
+- `NP_DETECTED_DEVICES_PATH` (default `data/detected-devices.json`, JSON per app mobile / dashboard: lista ultimi dispositivi hotspot)
 - `NP_LICENSE_RATE_LIMIT_PER_MIN` (default `10`, limite endpoint activate)
 - `NP_STRIPE_WEBHOOK_SECRET` (se impostata abilita verifica firma webhook Stripe)
 - `NP_STRIPE_WEBHOOK_TOLERANCE_SEC` (opzionale, default `300`): finestra anti-replay in secondi per l’header `Stripe-Signature` (allineato allo Stripe SDK, max effettivo 3600 → cap a 1h)

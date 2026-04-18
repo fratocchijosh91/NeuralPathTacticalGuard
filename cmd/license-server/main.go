@@ -37,6 +37,7 @@ type serverConfig struct {
 	tokenTTL               time.Duration
 	rateLimitPerMin        int
 	allowedKeysPath        string
+	detectedDevicesPath    string
 	adminAPIKey            string
 	stripeWebhookSecret    string
 	stripeWebhookTolerance time.Duration
@@ -84,6 +85,13 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodOptions {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		w.Header().Set("Access-Control-Allow-Origin", "*")
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	})
 	mux.HandleFunc("/v1/public-key", func(w http.ResponseWriter, r *http.Request) {
@@ -96,6 +104,7 @@ func main() {
 	mux.HandleFunc("/v1/licenses/activate",
 		auditLogMiddleware(rateLimitMiddleware(activateRL, cfg.handleActivate)),
 	)
+	mux.HandleFunc("/v1/detected-devices", auditLogMiddleware(cfg.handleDetectedDevices))
 	mux.HandleFunc("/v1/webhooks/stripe", auditLogMiddleware(cfg.handleStripeWebhook))
 	mux.HandleFunc("/v1/admin/licenses/create",
 		auditLogMiddleware(requireAPIKeyMiddleware(cfg.adminAPIKey, cfg.handleAdminCreateLicense)),
@@ -231,6 +240,7 @@ func loadServerConfigFromEnv() (*serverConfig, error) {
 		tokenTTL:               parseTTLHours(),
 		rateLimitPerMin:        parseRateLimit(),
 		allowedKeysPath:        strings.TrimSpace(getEnvOrDefault("NP_LICENSE_KEYS_PATH", "data/allowed-keys.json")),
+		detectedDevicesPath:    strings.TrimSpace(getEnvOrDefault("NP_DETECTED_DEVICES_PATH", "data/detected-devices.json")),
 		adminAPIKey:            strings.TrimSpace(os.Getenv("NP_ADMIN_API_KEY")),
 		stripeWebhookSecret:    strings.TrimSpace(os.Getenv("NP_STRIPE_WEBHOOK_SECRET")),
 		stripeWebhookTolerance: parseStripeWebhookTolerance(),
