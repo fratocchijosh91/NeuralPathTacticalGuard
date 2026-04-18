@@ -42,17 +42,44 @@ Risposta:
 - `NP_LICENSE_KEYS_PATH` (default `data/allowed-keys.json`, file persistenza allowlist)
 - `NP_LICENSE_RATE_LIMIT_PER_MIN` (default `10`, limite endpoint activate)
 - `NP_STRIPE_WEBHOOK_SECRET` (se impostata abilita verifica firma webhook Stripe)
+- `NP_STRIPE_WEBHOOK_TOLERANCE_SEC` (opzionale, default `300`): finestra anti-replay in secondi per l’header `Stripe-Signature` (allineato allo Stripe SDK, max effettivo 3600 → cap a 1h)
 - `NP_ADMIN_API_KEY` (abilita endpoint admin per creazione chiavi)
 
 ## Webhook Stripe
 
 Endpoint: `POST /v1/webhooks/stripe`
 
-- Verifica header `Stripe-Signature` via HMAC-SHA256 con `NP_STRIPE_WEBHOOK_SECRET`.
+- Verifica header `Stripe-Signature` via HMAC-SHA256 con `NP_STRIPE_WEBHOOK_SECRET` (stringa completa incluso prefisso `whsec_`, come nel Dashboard / Stripe CLI).
+- Controlla il timestamp dell’evento entro `NP_STRIPE_WEBHOOK_TOLERANCE_SEC` (default 5 minuti) per limitare replay.
+- Valida tutte le firme `v1` presenti nell’header (rotazione segreti Stripe).
 - Evento supportato: `checkout.session.completed` con `payment_status=paid`.
 - Se `metadata.license_key` è presente, usa quella chiave.
 - Altrimenti genera automaticamente una chiave `NP-PRO-<hash>`.
 - La chiave viene aggiunta all'allowlist in memoria e persistita nel file `NP_LICENSE_KEYS_PATH`.
+
+## Stripe Live (produzione)
+
+1. **Dashboard Stripe**  
+   Passa alla **modalità Live** (interruttore in alto a destra). Test e Live hanno **chiavi e webhook signing secret diversi**: non riusare `whsec_` di test in produzione.
+
+2. **Endpoint webhook Live**  
+   In [Developers → Webhooks](https://dashboard.stripe.com/webhooks) (contesto Live) aggiungi endpoint:  
+   `https://<tuo-dominio-railway>/v1/webhooks/stripe`  
+   Evento da inviare: **`checkout.session.completed`**.  
+   Copia il **Signing secret** (`whsec_...`) e impostalo su Railway come **`NP_STRIPE_WEBHOOK_SECRET`** (sostituendo il valore di test).
+
+3. **Checkout / Payment Link Live**  
+   Crea il flusso di pagamento in **Live** (Payment Links, Checkout Session, ecc.).  
+   Opzionale ma consigliato: in **metadata** imposta `license_key` con una chiave già nel formato `NP-PRO-...` se vuoi controllare tu la stringa; altrimenti il server la deriva da `client_reference_id`, email o `session.id`.
+
+4. **Railway**  
+   Ridistribuisci il servizio dopo aver aggiornato le variabili. Verifica nei log che compaia `webhookEnabled=true` e che dopo un acquisto reale compaia `AUDIT STRIPE_WEBHOOK_OK`.
+
+5. **Staging vs produzione**  
+   Per non mischiare acquisti test e live, conviene **due progetti Railway** (o due servizi) con coppie distinte di `NP_STRIPE_WEBHOOK_SECRET` e allowlist (`NP_LICENSE_KEYS_PATH` / volume se in futuro userai storage condiviso).
+
+6. **Client desktop**  
+   L’app non usa la secret Stripe: deve solo avere `license_server_url` e `license_public_key` del **server che firma i token** in produzione (solitamente lo stesso deploy Live del license server).
 
 ## Endpoint admin (manuale/supporto)
 

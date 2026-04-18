@@ -29,20 +29,21 @@ const (
 const defaultRateLimitPerMin = 10
 
 type serverConfig struct {
-	addr                string
-	product             string
-	tier                string
-	prefix              string
-	allowAnyKey         bool
-	tokenTTL            time.Duration
-	rateLimitPerMin     int
-	allowedKeysPath     string
-	adminAPIKey         string
-	stripeWebhookSecret string
-	allowedKeys         map[string]struct{}
-	allowedKeysMu       sync.RWMutex
-	privateKey          ed25519.PrivateKey
-	publicKey           ed25519.PublicKey
+	addr                   string
+	product                string
+	tier                   string
+	prefix                 string
+	allowAnyKey            bool
+	tokenTTL               time.Duration
+	rateLimitPerMin        int
+	allowedKeysPath        string
+	adminAPIKey            string
+	stripeWebhookSecret    string
+	stripeWebhookTolerance time.Duration
+	allowedKeys            map[string]struct{}
+	allowedKeysMu          sync.RWMutex
+	privateKey             ed25519.PrivateKey
+	publicKey              ed25519.PublicKey
 }
 
 type activationRequest struct {
@@ -77,8 +78,8 @@ func main() {
 	activateRL := newIPRateLimiter(cfg.rateLimitPerMin, 1*time.Minute)
 
 	log.Printf("license-server avviato su %s", cfg.addr)
-	log.Printf("product=%s tier=%s prefix=%s ttl=%s allowAnyKey=%t allowedKeys=%d rateLimit=%d/min webhookEnabled=%t adminEnabled=%t",
-		cfg.product, cfg.tier, cfg.prefix, cfg.tokenTTL.String(), cfg.allowAnyKey, len(cfg.allowedKeys), cfg.rateLimitPerMin, cfg.stripeWebhookSecret != "", cfg.adminAPIKey != "")
+	log.Printf("product=%s tier=%s prefix=%s ttl=%s allowAnyKey=%t allowedKeys=%d rateLimit=%d/min webhookEnabled=%t webhookTolerance=%s adminEnabled=%t",
+		cfg.product, cfg.tier, cfg.prefix, cfg.tokenTTL.String(), cfg.allowAnyKey, len(cfg.allowedKeys), cfg.rateLimitPerMin, cfg.stripeWebhookSecret != "", cfg.stripeWebhookTolerance.String(), cfg.adminAPIKey != "")
 	log.Printf("NP_LICENSE_PUBLIC_KEY_B64=%s", base64.StdEncoding.EncodeToString(cfg.publicKey))
 
 	mux := http.NewServeMux()
@@ -222,19 +223,20 @@ func loadServerConfigFromEnv() (*serverConfig, error) {
 	}
 
 	cfg := &serverConfig{
-		addr:                resolveListenAddr(),
-		product:             getEnvOrDefault("NP_LICENSE_PRODUCT", defaultProduct),
-		tier:                strings.ToUpper(strings.TrimSpace(getEnvOrDefault("NP_LICENSE_TIER", defaultTier))),
-		prefix:              strings.ToUpper(strings.TrimSpace(getEnvOrDefault("NP_LICENSE_PREFIX", defaultPrefix))),
-		allowAnyKey:         strings.EqualFold(strings.TrimSpace(os.Getenv("NP_LICENSE_ALLOW_ANY_KEY")), "true"),
-		tokenTTL:            parseTTLHours(),
-		rateLimitPerMin:     parseRateLimit(),
-		allowedKeysPath:     strings.TrimSpace(getEnvOrDefault("NP_LICENSE_KEYS_PATH", "data/allowed-keys.json")),
-		adminAPIKey:         strings.TrimSpace(os.Getenv("NP_ADMIN_API_KEY")),
-		stripeWebhookSecret: strings.TrimSpace(os.Getenv("NP_STRIPE_WEBHOOK_SECRET")),
-		allowedKeys:         parseAllowedLicenseKeys(os.Getenv("NP_LICENSE_KEYS")),
-		privateKey:          privateKey,
-		publicKey:           publicKey,
+		addr:                   resolveListenAddr(),
+		product:                getEnvOrDefault("NP_LICENSE_PRODUCT", defaultProduct),
+		tier:                   strings.ToUpper(strings.TrimSpace(getEnvOrDefault("NP_LICENSE_TIER", defaultTier))),
+		prefix:                 strings.ToUpper(strings.TrimSpace(getEnvOrDefault("NP_LICENSE_PREFIX", defaultPrefix))),
+		allowAnyKey:            strings.EqualFold(strings.TrimSpace(os.Getenv("NP_LICENSE_ALLOW_ANY_KEY")), "true"),
+		tokenTTL:               parseTTLHours(),
+		rateLimitPerMin:        parseRateLimit(),
+		allowedKeysPath:        strings.TrimSpace(getEnvOrDefault("NP_LICENSE_KEYS_PATH", "data/allowed-keys.json")),
+		adminAPIKey:            strings.TrimSpace(os.Getenv("NP_ADMIN_API_KEY")),
+		stripeWebhookSecret:    strings.TrimSpace(os.Getenv("NP_STRIPE_WEBHOOK_SECRET")),
+		stripeWebhookTolerance: parseStripeWebhookTolerance(),
+		allowedKeys:            parseAllowedLicenseKeys(os.Getenv("NP_LICENSE_KEYS")),
+		privateKey:             privateKey,
+		publicKey:              publicKey,
 	}
 
 	loadedFromFile, err := loadAllowedKeysFromFile(cfg.allowedKeysPath)
@@ -269,6 +271,22 @@ func parseRateLimit() int {
 		return defaultRateLimitPerMin
 	}
 	return n
+}
+
+// parseStripeWebhookTolerance restituisce la finestra anti-replay per la firma webhook (default 5 minuti, come Stripe SDK).
+func parseStripeWebhookTolerance() time.Duration {
+	raw := strings.TrimSpace(os.Getenv("NP_STRIPE_WEBHOOK_TOLERANCE_SEC"))
+	if raw == "" {
+		return 5 * time.Minute
+	}
+	sec, err := strconv.Atoi(raw)
+	if err != nil || sec <= 0 {
+		return 5 * time.Minute
+	}
+	if sec > 3600 {
+		return time.Hour
+	}
+	return time.Duration(sec) * time.Second
 }
 
 func parseTTLHours() time.Duration {

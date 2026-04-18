@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/hmac"
 	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -13,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -102,9 +104,25 @@ func (cfg *serverConfig) handleStripeWebhook(w http.ResponseWriter, r *http.Requ
 }
 
 func (cfg *serverConfig) verifyStripeSignature(payload []byte, signatureHeader string) bool {
-	ts, sig := parseStripeSignatureHeader(signatureHeader)
-	if ts == "" || sig == "" {
+	ts, sigs := parseStripeSignatureHeader(signatureHeader)
+	if ts == "" || len(sigs) == 0 {
 		return false
+	}
+
+	tsUnix, err := strconv.ParseInt(ts, 10, 64)
+	if err != nil {
+		return false
+	}
+	if cfg.stripeWebhookTolerance > 0 {
+		eventTime := time.Unix(tsUnix, 0)
+		delta := time.Since(eventTime)
+		if delta < 0 {
+			delta = -delta
+		}
+		if delta > cfg.stripeWebhookTolerance {
+			log.Printf("AUDIT STRIPE_WEBHOOK_REJECT reason=timestamp_outside_tolerance delta=%s tolerance=%s", delta.String(), cfg.stripeWebhookTolerance.String())
+			return false
+		}
 	}
 
 	mac := hmac.New(sha256.New, []byte(cfg.stripeWebhookSecret))
@@ -112,24 +130,36 @@ func (cfg *serverConfig) verifyStripeSignature(payload []byte, signatureHeader s
 	_, _ = mac.Write([]byte("."))
 	_, _ = mac.Write(payload)
 	expected := hex.EncodeToString(mac.Sum(nil))
-	return hmac.Equal([]byte(expected), []byte(sig))
+	expectedLower := strings.ToLower(expected)
+
+	for _, sig := range sigs {
+		sig = strings.TrimSpace(strings.ToLower(sig))
+		if len(sig) != len(expectedLower) {
+			continue
+		}
+		if subtle.ConstantTimeCompare([]byte(expectedLower), []byte(sig)) == 1 {
+			return true
+		}
+	}
+	return false
 }
 
-func parseStripeSignatureHeader(header string) (timestamp string, signature string) {
+// parseStripeSignatureHeader estrae timestamp e tutte le firme v1 (Stripe può inviarne più di una in rotazione segreti).
+func parseStripeSignatureHeader(header string) (timestamp string, signatures []string) {
 	parts := strings.Split(header, ",")
 	for _, part := range parts {
 		piece := strings.SplitN(strings.TrimSpace(part), "=", 2)
 		if len(piece) != 2 {
 			continue
 		}
-		switch piece[0] {
+		switch strings.TrimSpace(piece[0]) {
 		case "t":
 			timestamp = piece[1]
 		case "v1":
-			signature = piece[1]
+			signatures = append(signatures, piece[1])
 		}
 	}
-	return timestamp, signature
+	return timestamp, signatures
 }
 
 func (cfg *serverConfig) generateLicenseKeyFromSession(session stripeCheckoutSession) string {

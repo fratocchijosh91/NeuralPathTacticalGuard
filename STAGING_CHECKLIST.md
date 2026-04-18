@@ -36,3 +36,13 @@
 - [ ] Attivazione PRO dall'app funziona end-to-end
 - [ ] Disattivazione licenza dall'app funziona
 - [ ] Trial senza licenza funziona normalmente
+
+## Produzione (Stripe Live)
+
+- [ ] Dashboard Stripe in **modalità Live** (non Test)
+- [ ] Webhook Live creato verso `https://<railway-prod>/v1/webhooks/stripe` con evento `checkout.session.completed`
+- [ ] `NP_STRIPE_WEBHOOK_SECRET` su Railway = signing secret **Live** (`whsec_...` dalla pagina del webhook Live)
+- [ ] (Opzionale) `NP_STRIPE_WEBHOOK_TOLERANCE_SEC` impostato se serve allungare la finestra (default 300 s)
+- [ ] Payment Link / Checkout configurati in **Live** e pagamento di prova completato
+- [ ] Log Railway: `AUDIT STRIPE_WEBHOOK_OK` dopo pagamento; allowlist aggiornata (`data/allowed-keys.json` nel volume)
+- [ ] Client: `license_server_url` e `license_public_key` puntano al **deploy di produzione** che firma i token
