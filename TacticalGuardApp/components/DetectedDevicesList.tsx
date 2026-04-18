@@ -1,6 +1,6 @@
-import { View, Text, FlatList } from "react-native";
+import { View, Text } from "react-native";
 import { Smartphone, Signal } from "lucide-react-native";
-import type { DetectedDevice } from "@/lib/api";
+import type { DetectedDevice } from "../lib/api";
 
 type Props = {
   devices: DetectedDevice[];
@@ -62,13 +62,12 @@ export function DetectedDevicesList({ devices, loading, error }: Props) {
   }
 
   return (
-    <FlatList
-      data={devices}
-      keyExtractor={(item) => item.id || `${item.type}-${item.last_seen}`}
-      scrollEnabled={false}
-      ItemSeparatorComponent={() => <View className="h-2" />}
-      renderItem={({ item }) => (
-        <View className="flex-row items-stretch rounded-lg border border-cyber-border bg-cyber-panel px-3 py-3">
+    <View className="gap-2">
+      {devices.map((item) => (
+        <View
+          key={item.id || `${item.type}-${item.last_seen}`}
+          className="flex-row items-stretch rounded-lg border border-cyber-border bg-cyber-panel px-3 py-3"
+        >
           <View className="mr-3 items-center justify-center border-r border-cyber-border pr-3">
             <Smartphone color={item.online ? neon : "#6b7280"} size={22} />
           </View>
@@ -90,7 +89,7 @@ export function DetectedDevicesList({ devices, loading, error }: Props) {
             </Text>
           </View>
         </View>
-      )}
-    />
+      ))}
+    </View>
   );
 }

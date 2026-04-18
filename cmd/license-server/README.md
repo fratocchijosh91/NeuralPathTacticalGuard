@@ -5,7 +5,7 @@ Mini backend per attivazione licenze compatibile con il client in `licenze.go`.
 ## Endpoint
 
 - `GET /healthz`
-- `GET /v1/detected-devices` (lettura JSON dispositivi rilevati, vedi sotto)
+- `GET /v1/detected-devices` (lettura JSON dispositivi rilevati; file `NP_DETECTED_DEVICES_PATH`, formato `{"devices":[...]}` o array JSON — vedi `data/detected-devices.example.json`)
 - `GET /v1/public-key`
 - `POST /v1/licenses/activate`
 - `POST /v1/webhooks/stripe`

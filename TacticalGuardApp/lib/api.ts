@@ -1,4 +1,4 @@
-import { DEFAULT_RAILWAY_BASE } from "@/constants/defaults";
+import { DEFAULT_RAILWAY_BASE } from "../constants/defaults";
 
 export type DetectedDevice = {
   id: string;

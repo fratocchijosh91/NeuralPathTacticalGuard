@@ -14,7 +14,10 @@ export default function RootLayout() {
           headerTitleStyle: { fontWeight: "700" },
           contentStyle: { backgroundColor: "#030806" },
         }}
-      />
+      >
+        <Stack.Screen name="index" options={{ title: "NeuralPath" }} />
+        <Stack.Screen name="diagnostics" options={{ title: "Diagnostica" }} />
+      </Stack>
     </>
   );
 }

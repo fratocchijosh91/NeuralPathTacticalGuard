@@ -9,14 +9,14 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Link } from "expo-router";
 import { Activity, RadioTower } from "lucide-react-native";
-import { ServerStatusCard } from "@/components/ServerStatusCard";
-import { DetectedDevicesList } from "@/components/DetectedDevicesList";
+import { ServerStatusCard } from "../components/ServerStatusCard";
+import { DetectedDevicesList } from "../components/DetectedDevicesList";
 import {
   fetchDetectedDevices,
   fetchServerConnected,
   getRailwayBaseUrl,
   type DetectedDevice,
-} from "@/lib/api";
+} from "../lib/api";
 
 export default function HomeScreen() {
   const baseUrl = getRailwayBaseUrl();
